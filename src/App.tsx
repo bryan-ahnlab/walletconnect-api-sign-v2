@@ -1,20 +1,22 @@
 import React from "react";
 import "./App.css";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SignClient } from "@walletconnect/sign-client";
 
 import { Web3Modal } from "@web3modal/standalone";
 import { SessionTypes } from "@walletconnect/types";
 import { ErrorResponse } from "@walletconnect/jsonrpc-types";
 
-const WALLET_ID =
-  "b956da9052132e3dabdcd78feb596d5194c99b7345d8c4bd7a47cabdcb69a25f";
+const projectId = process.env.REACT_APP_PROJECT_ID as string | "";
+const walletId = process.env.REACT_APP_WALLET_ID as string | "";
+const testAccount = process.env.REACT_APP_TEST_ACCOUNT as string | "";
+
 const web3Modal = new Web3Modal({
-  projectId: process.env.REACT_APP_PROJECT_ID || "",
+  projectId: projectId,
   standaloneChains: ["eip155:1001"],
   walletConnectVersion: 2,
-  explorerRecommendedWalletIds: [WALLET_ID],
+  explorerRecommendedWalletIds: [walletId],
   explorerExcludedWalletIds: "ALL",
 });
 
@@ -25,20 +27,24 @@ function App() {
   const [session, setSession] = useState<SessionTypes.Struct | null>(null);
   const [account, setAccount] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!signClient) {
-      createClient();
-    }
-  }, [signClient]);
-
   async function createClient() {
     try {
+      const metadata = {
+        name: "ABC DApp",
+        description: "Wallet Connect Web3Modal v2.0 Sample",
+        url: "https://abc-dapp.com",
+        icons: [
+          "https://explorer-api.walletconnect.com/v3/logo/lg/f9854c79-14ba-4987-42e1-4a82abbf5700?projectId=2f05ae7f1116030fde2d36508f472bfb",
+        ],
+      };
+
       const signClient = await SignClient.init({
-        projectId: process.env.REACT_APP_PROJECT_ID,
+        projectId: projectId,
+        metadata: metadata,
       });
-      setSignClient(signClient);
+      return signClient;
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -58,13 +64,14 @@ function App() {
           .join(":")
       );
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
   async function handleConnect() {
-    if (!signClient) throw Error("SignClient does not exist");
+    const _signClient = await createClient();
     try {
+      if (!_signClient) throw Error("SignClient does not exist");
       const proposalNamespace = {
         eip155: {
           methods: [
@@ -77,17 +84,18 @@ function App() {
           events: ["chainChanged", "accountsChanged"],
         },
       };
-      const { uri, approval } = await signClient.connect({
+      const { uri, approval } = await _signClient.connect({
         requiredNamespaces: proposalNamespace,
       });
       if (uri) {
         web3Modal.openModal({ uri });
         const sessionNamespace = await approval();
+        setSignClient(_signClient);
         onSessionConnected(sessionNamespace);
         web3Modal.closeModal();
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -102,7 +110,7 @@ function App() {
         reset();
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -111,7 +119,7 @@ function App() {
     try {
       if (session && account) {
         const tx = {
-          message: "Hello World!",
+          message: "hello world!",
           address: account,
         };
         const response = await signClient.request({
@@ -122,10 +130,10 @@ function App() {
             params: [tx.message, tx.address],
           },
         });
-        console.log(`response: ${response}`);
+        console.info(`response: ${response}`);
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -135,7 +143,7 @@ function App() {
       if (session && account) {
         const tx = {
           from: account,
-          to: process.env.REACT_APP_TEST_ACCOUNT || "",
+          to: testAccount,
           data: "0x",
           value: "0x00",
         };
@@ -147,10 +155,10 @@ function App() {
             params: [tx],
           },
         });
-        console.log(`response: ${response}`);
+        console.info(`response: ${response}`);
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -215,11 +223,11 @@ function App() {
             message: {
               from: {
                 name: "Cow",
-                wallet: process.env.REACT_APP_TEST_ACCOUNT || "",
+                wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
               },
               to: {
                 name: "Bob",
-                wallet: process.env.REACT_APP_TEST_ACCOUNT || "",
+                wallet: "0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB",
               },
               contents: "Hello, Bob!",
             },
@@ -233,10 +241,10 @@ function App() {
             params: [tx.address, tx.message],
           },
         });
-        console.log(`response: ${response}`);
+        console.info(`response: ${response}`);
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -246,7 +254,7 @@ function App() {
       if (session && account) {
         const tx = {
           from: account,
-          to: process.env.REACT_APP_TEST_ACCOUNT || "",
+          to: testAccount,
           data: "0x",
           gasLimit: "0x5208",
           value: "0x00",
@@ -259,16 +267,16 @@ function App() {
             params: [tx],
           },
         });
-        console.log(`response: ${response}`);
+        console.info(`response: ${response}`);
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
   return (
     <div className="App" style={{ textAlign: "center", padding: "0 2rem" }}>
-      <h1>Wallet Connect v2.0 Sign SDK Sample</h1>
+      <h1>Wallet Connect Web3Modal v2.0 Sample</h1>
       <div
         style={{
           display: "flex",
@@ -289,7 +297,7 @@ function App() {
             wordBreak: "break-all",
           }}
           onClick={handleConnect}
-          disabled={!signClient}
+          disabled={account ? true : false}
         >
           Connect
         </button>
@@ -305,7 +313,7 @@ function App() {
             wordBreak: "break-all",
           }}
           onClick={handleDisconnect}
-          disabled={!signClient}
+          disabled={!account ? true : false}
         >
           Disconnect
         </button>
@@ -321,7 +329,7 @@ function App() {
             wordBreak: "break-all",
           }}
           onClick={handlePersonalSign}
-          disabled={!signClient}
+          disabled={!account ? true : false}
         >
           Personal Sign
         </button>
@@ -337,7 +345,7 @@ function App() {
             wordBreak: "break-all",
           }}
           onClick={handleEthSignTransaction}
-          disabled={!signClient}
+          disabled={!account ? true : false}
         >
           Sign Transaction
         </button>
@@ -353,7 +361,7 @@ function App() {
             wordBreak: "break-all",
           }}
           onClick={handleEthSignTypedData}
-          disabled={!signClient}
+          disabled={!account ? true : false}
         >
           Sign Typed Data
         </button>
@@ -369,7 +377,7 @@ function App() {
             wordBreak: "break-all",
           }}
           onClick={handleEthSendTransaction}
-          disabled={!signClient}
+          disabled={!account ? true : false}
         >
           Send Transaction
         </button>
