@@ -1,16 +1,16 @@
 import React from "react";
 import "./App.css";
 
-import { useState } from "react";
-import { SignClient } from "@walletconnect/sign-client";
+import { useState, useCallback } from "react";
 
 import { Web3Modal } from "@web3modal/standalone";
+import { SignClient } from "@walletconnect/sign-client";
 import { SessionTypes } from "@walletconnect/types";
 import { ErrorResponse } from "@walletconnect/jsonrpc-types";
 
-const projectId = process.env.REACT_APP_PROJECT_ID as string | "";
-const walletId = process.env.REACT_APP_WALLET_ID as string | "";
-const testAccount = process.env.REACT_APP_TEST_ACCOUNT as string | "";
+const projectId = process.env.REACT_APP_PROJECT_ID || "";
+const walletId = process.env.REACT_APP_WALLET_ID || "";
+const testAccount = process.env.REACT_APP_TEST_ACCOUNT || "";
 
 const web3Modal = new Web3Modal({
   projectId: projectId,
@@ -27,7 +27,7 @@ function App() {
   const [session, setSession] = useState<SessionTypes.Struct | null>(null);
   const [account, setAccount] = useState<string | null>(null);
 
-  async function createClient() {
+  const createClient = useCallback(async () => {
     try {
       const metadata = {
         name: "ABC DApp",
@@ -43,35 +43,38 @@ function App() {
         metadata: metadata,
       });
       return signClient;
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(`createClient: ${JSON.stringify(error)}`);
     }
-  }
+  }, []);
 
-  const reset = () => {
+  const onSessionConnected = useCallback(
+    (sessionNamespace: SessionTypes.Struct) => {
+      try {
+        setSession(sessionNamespace);
+        setAccount(
+          sessionNamespace.namespaces.eip155.accounts[0]
+            .split(":")
+            .slice(2)
+            .join(":")
+        );
+      } catch (error) {
+        console.error(`onSessionConnected: ${JSON.stringify(error)}`);
+      }
+    },
+    []
+  );
+
+  const reset = useCallback(() => {
     setSignClient(null);
     setSession(null);
     setAccount(null);
-  };
+  }, []);
 
-  async function onSessionConnected(sessionNamespace: SessionTypes.Struct) {
-    try {
-      setSession(sessionNamespace);
-      setAccount(
-        sessionNamespace.namespaces.eip155.accounts[0]
-          .split(":")
-          .slice(2)
-          .join(":")
-      );
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  async function handleConnect() {
+  const handleConnect = useCallback(async () => {
     const _signClient = await createClient();
     try {
-      if (!_signClient) throw Error("SignClient does not exist");
+      if (!_signClient) throw Error("Sign client does not exist.");
       const proposalNamespace = {
         eip155: {
           methods: [
@@ -94,13 +97,11 @@ function App() {
         onSessionConnected(sessionNamespace);
         web3Modal.closeModal();
       }
-    } catch (e) {
-      console.error(e);
-    }
-  }
+    } catch (error) {}
+  }, [createClient, onSessionConnected]);
 
-  async function handleDisconnect() {
-    if (!signClient) throw Error("SignClient does not exist");
+  const handleDisconnect = useCallback(async () => {
+    if (!signClient) throw Error("Sign client does not exist.");
     try {
       if (session) {
         await signClient.disconnect({
@@ -109,13 +110,13 @@ function App() {
         });
         reset();
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(`handleDisconnect: ${JSON.stringify(error)}`);
     }
-  }
+  }, [reset, session, signClient]);
 
-  async function handlePersonalSign() {
-    if (!signClient) throw Error("SignClient does not exist");
+  const handlePersonalSign = useCallback(async () => {
+    if (!signClient) throw Error("Sign client does not exist.");
     try {
       if (session && account) {
         const tx = {
@@ -132,13 +133,13 @@ function App() {
         });
         console.info(`response: ${response}`);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(`handlePersonalSign: ${JSON.stringify(error)}`);
     }
-  }
+  }, [account, session, signClient]);
 
-  async function handleEthSignTransaction() {
-    if (!signClient) throw Error("SignClient does not exist");
+  const handleEthSignTransaction = useCallback(async () => {
+    if (!signClient) throw Error("Sign client does not exist.");
     try {
       if (session && account) {
         const tx = {
@@ -157,13 +158,13 @@ function App() {
         });
         console.info(`response: ${response}`);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(`handleEthSignTransaction: ${JSON.stringify(error)}`);
     }
-  }
+  }, [account, session, signClient]);
 
-  async function handleEthSignTypedData() {
-    if (!signClient) throw Error("SignClient does not exist");
+  const handleEthSignTypedData = useCallback(async () => {
+    if (!signClient) throw Error("Sign client does not exist.");
     try {
       if (session && account) {
         const tx = {
@@ -243,13 +244,13 @@ function App() {
         });
         console.info(`response: ${response}`);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(`handleEthSignTypedData: ${JSON.stringify(error)}`);
     }
-  }
+  }, [account, session, signClient]);
 
-  async function handleEthSendTransaction() {
-    if (!signClient) throw Error("SignClient does not exist");
+  const handleEthSendTransaction = useCallback(async () => {
+    if (!signClient) throw Error("Sign client does not exist.");
     try {
       if (session && account) {
         const tx = {
@@ -269,10 +270,10 @@ function App() {
         });
         console.info(`response: ${response}`);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(`handleEthSendTransaction: ${JSON.stringify(error)}`);
     }
-  }
+  }, [account, session, signClient]);
 
   return (
     <div className="App" style={{ textAlign: "center", padding: "0 2rem" }}>
@@ -286,104 +287,69 @@ function App() {
         }}
       >
         <button
-          style={{
-            width: "100%",
-            minHeight: "3rem",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: "bold",
-            borderRadius: "0.5rem",
-            padding: "0.5rem",
-            wordBreak: "break-all",
-          }}
+          className="button"
           onClick={handleConnect}
-          disabled={account ? true : false}
+          disabled={session ? true : false}
         >
           Connect
         </button>
         <button
-          style={{
-            width: "100%",
-            minHeight: "3rem",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: "bold",
-            borderRadius: "0.5rem",
-            padding: "0.5rem",
-            wordBreak: "break-all",
-          }}
+          className="button"
           onClick={handleDisconnect}
-          disabled={!account ? true : false}
+          disabled={!session ? true : false}
         >
           Disconnect
         </button>
         <button
-          style={{
-            width: "100%",
-            minHeight: "3rem",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: "bold",
-            borderRadius: "0.5rem",
-            padding: "0.5rem",
-            wordBreak: "break-all",
-          }}
+          className="button"
           onClick={handlePersonalSign}
-          disabled={!account ? true : false}
+          disabled={!session ? true : false}
         >
           Personal Sign
         </button>
         <button
-          style={{
-            width: "100%",
-            minHeight: "3rem",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: "bold",
-            borderRadius: "0.5rem",
-            padding: "0.5rem",
-            wordBreak: "break-all",
-          }}
+          className="button"
           onClick={handleEthSignTransaction}
-          disabled={!account ? true : false}
+          disabled={!session ? true : false}
         >
           Sign Transaction
         </button>
         <button
-          style={{
-            width: "100%",
-            minHeight: "3rem",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: "bold",
-            borderRadius: "0.5rem",
-            padding: "0.5rem",
-            wordBreak: "break-all",
-          }}
+          className="button"
           onClick={handleEthSignTypedData}
-          disabled={!account ? true : false}
+          disabled={!session ? true : false}
         >
           Sign Typed Data
         </button>
         <button
-          style={{
-            width: "100%",
-            minHeight: "3rem",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: "bold",
-            borderRadius: "0.5rem",
-            padding: "0.5rem",
-            wordBreak: "break-all",
-          }}
+          className="button"
           onClick={handleEthSendTransaction}
-          disabled={!account ? true : false}
+          disabled={!session ? true : false}
         >
           Send Transaction
         </button>
-        {account ? (
-          <span style={{ wordBreak: "break-all" }}>account: {account}</span>
-        ) : null}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+            alignItems: "center",
+          }}
+        >
+          <span style={{ wordBreak: "break-all" }}>
+            account status: {session ? "connected" : "disconnected"}
+          </span>
+          {session ? (
+            <span style={{ wordBreak: "break-all" }}>
+              account address: {account}
+            </span>
+          ) : null}
+          {session ? (
+            <span style={{ wordBreak: "break-all" }}>
+              account chainId: {session.namespaces.eip155.chains?.[0]}
+            </span>
+          ) : null}
+        </div>
       </div>
     </div>
   );
