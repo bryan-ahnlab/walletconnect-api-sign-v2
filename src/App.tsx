@@ -97,7 +97,9 @@ function App() {
         onSessionConnected(sessionNamespace);
         web3Modal.closeModal();
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error(`handleConnect: ${JSON.stringify(error)}`);
+    }
   }, [createClient, onSessionConnected]);
 
   const handleDisconnect = useCallback(async () => {
