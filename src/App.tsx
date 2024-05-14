@@ -14,7 +14,7 @@ const testAccount = process.env.REACT_APP_TEST_ACCOUNT || "";
 
 const web3Modal = new Web3Modal({
   projectId: projectId,
-  standaloneChains: ["eip155:1001"],
+  standaloneChains: ["eip155:8217"],
   walletConnectVersion: 2,
   explorerRecommendedWalletIds: [walletId],
   explorerExcludedWalletIds: "ALL",
@@ -83,7 +83,7 @@ function App() {
             "eth_signTypedData",
             "eth_sendTransaction",
           ],
-          chains: ["eip155:1001"],
+          chains: ["eip155:8217"],
           events: ["chainChanged", "accountsChanged"],
         },
       };
@@ -127,7 +127,7 @@ function App() {
         };
         const response = await signClient.request({
           topic: session.topic,
-          chainId: "eip155:1001",
+          chainId: "eip155:8217",
           request: {
             method: "personal_sign",
             params: [tx.message, tx.address],
@@ -152,7 +152,7 @@ function App() {
         };
         const response = await signClient.request({
           topic: session.topic,
-          chainId: "eip155:1001",
+          chainId: "eip155:8217",
           request: {
             method: "eth_signTransaction",
             params: [tx],
@@ -220,7 +220,7 @@ function App() {
             domain: {
               name: "Ether Mail",
               version: "1",
-              chainId: "1001",
+              chainId: "8217",
               verifyingContract: "0xa",
             },
             message: {
@@ -238,7 +238,7 @@ function App() {
         };
         const response = await signClient.request({
           topic: session.topic,
-          chainId: "eip155:1001",
+          chainId: "eip155:8217",
           request: {
             method: "eth_signTypedData",
             params: [tx.address, tx.message],
@@ -264,7 +264,7 @@ function App() {
         };
         const response = await signClient.request({
           topic: session.topic,
-          chainId: "eip155:1001",
+          chainId: "eip155:8217",
           request: {
             method: "eth_sendTransaction",
             params: [tx],
