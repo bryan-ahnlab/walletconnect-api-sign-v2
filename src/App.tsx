@@ -79,8 +79,7 @@ function App() {
         eip155: {
           methods: [
             "personal_sign",
-            "eth_signTransaction",
-            "eth_signTypedData",
+            "eth_signTypedData_v4",
             "eth_sendTransaction",
           ],
           chains: ["eip155:8217"],
@@ -140,32 +139,7 @@ function App() {
     }
   }, [account, session, signClient]);
 
-  const handleEthSignTransaction = useCallback(async () => {
-    if (!signClient) throw Error("Sign client does not exist.");
-    try {
-      if (session && account) {
-        const tx = {
-          from: account,
-          to: testAccount,
-          data: "0x",
-          value: "0x00",
-        };
-        const response = await signClient.request({
-          topic: session.topic,
-          chainId: "eip155:8217",
-          request: {
-            method: "eth_signTransaction",
-            params: [tx],
-          },
-        });
-        console.info(`response: ${response}`);
-      }
-    } catch (error) {
-      console.error(`handleEthSignTransaction: ${JSON.stringify(error)}`);
-    }
-  }, [account, session, signClient]);
-
-  const handleEthSignTypedData = useCallback(async () => {
+  const handleEthSignTypedDataV4 = useCallback(async () => {
     if (!signClient) throw Error("Sign client does not exist.");
     try {
       if (session && account) {
@@ -240,14 +214,14 @@ function App() {
           topic: session.topic,
           chainId: "eip155:8217",
           request: {
-            method: "eth_signTypedData",
+            method: "eth_signTypedData_v4",
             params: [tx.address, tx.message],
           },
         });
         console.info(`response: ${response}`);
       }
     } catch (error) {
-      console.error(`handleEthSignTypedData: ${JSON.stringify(error)}`);
+      console.error(`handleEthSignTypedDataV4: ${JSON.stringify(error)}`);
     }
   }, [account, session, signClient]);
 
@@ -311,17 +285,10 @@ function App() {
         </button>
         <button
           className="button"
-          onClick={handleEthSignTransaction}
+          onClick={handleEthSignTypedDataV4}
           disabled={!session ? true : false}
         >
-          Sign Transaction
-        </button>
-        <button
-          className="button"
-          onClick={handleEthSignTypedData}
-          disabled={!session ? true : false}
-        >
-          Sign Typed Data
+          Sign Typed Data V4
         </button>
         <button
           className="button"
