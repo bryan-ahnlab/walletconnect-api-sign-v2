@@ -33,9 +33,7 @@ function App() {
         name: "ABC DApp",
         description: "Wallet Connect Web3Modal v2.0 Sample",
         url: "https://abc-dapp.com",
-        icons: [
-          "https://explorer-api.walletconnect.com/v3/logo/lg/f9854c79-14ba-4987-42e1-4a82abbf5700?projectId=2f05ae7f1116030fde2d36508f472bfb",
-        ],
+        icons: ["https://app.myabcwallet.com/v1/s3/image/icon/launcher.png"],
       };
 
       const signClient = await SignClient.init({
